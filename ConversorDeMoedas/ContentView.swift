@@ -18,6 +18,11 @@ struct ContentView: View {
     @State
     var rightAmount = ""
     
+    @FocusState
+    var leftTyping
+    @FocusState
+    var rightTyping
+    
     @State
     var leftCurrency: Currency = .silverPiece
     @State
@@ -63,10 +68,19 @@ struct ContentView: View {
                         .onTapGesture {
                             showSelectedCurrency.toggle()
                         }
+                        .onChange(of: leftCurrency) {
+                            rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
+                        }
                         
                         // Textfield
                         TextField("Amount", text: $leftAmount)
                             .textFieldStyle(.roundedBorder)
+                            .focused($leftTyping)
+                            .onChange(of: leftAmount) {
+                                if leftTyping {
+                                    rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
+                                }
+                            }
                     }
                     
                     // Equal sign
@@ -94,11 +108,21 @@ struct ContentView: View {
                         .onTapGesture {
                             showSelectedCurrency.toggle()
                         }
+                        .onChange(of: rightCurrency) {
+                            leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
+                        }
                         
                         // Textfiled
                         TextField("Amount", text: $rightAmount)
                             .textFieldStyle(.roundedBorder)
                             .multilineTextAlignment(.trailing)
+                            .focused($rightTyping)
+                            .onChange(of: rightAmount) {
+                                if rightTyping {
+                                    leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
+                                }
+                                
+                            }
                     }
                 }
                 .padding()
