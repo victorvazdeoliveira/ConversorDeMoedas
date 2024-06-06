@@ -6,27 +6,27 @@
 //
 
 import SwiftUI
+import TipKit
 
 struct ContentView: View {
+    let defaults = UserDefaults.standard
+    
     @State
     var showExchangeInfo = false
     @State
     var showSelectedCurrency = false
     
-    @State
-    var leftAmount = ""
-    @State
-    var rightAmount = ""
+    @State var leftAmount = UserDefaults.standard.string(forKey: "Left Amount") ?? ""
+    @State var rightAmount = UserDefaults.standard.string(forKey: "Right Amount") ?? ""
     
     @FocusState
     var leftTyping
     @FocusState
     var rightTyping
     
-    @State
-    var leftCurrency: Currency = .silverPiece
-    @State
-    var rightCurrency: Currency = .goldPiece
+    
+    @State var leftCurrency: Currency = Currency(rawValue: UserDefaults.standard.getLeftCurrency()) ?? Currency.silverPenny
+    @State var rightCurrency: Currency = Currency(rawValue: UserDefaults.standard.getRightCurrency()) ?? Currency.goldPiece
     
     var body: some View {
         ZStack {
@@ -68,19 +68,13 @@ struct ContentView: View {
                         .onTapGesture {
                             showSelectedCurrency.toggle()
                         }
-                        .onChange(of: leftCurrency) {
-                            rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
-                        }
+                        .popoverTip(CurrencyTip(), arrowEdge: .bottom)
                         
                         // Textfield
                         TextField("Amount", text: $leftAmount)
                             .textFieldStyle(.roundedBorder)
                             .focused($leftTyping)
-                            .onChange(of: leftAmount) {
-                                if leftTyping {
-                                    rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
-                                }
-                            }
+                            .keyboardType(.decimalPad)
                     }
                     
                     // Equal sign
@@ -108,21 +102,13 @@ struct ContentView: View {
                         .onTapGesture {
                             showSelectedCurrency.toggle()
                         }
-                        .onChange(of: rightCurrency) {
-                            leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
-                        }
                         
                         // Textfiled
                         TextField("Amount", text: $rightAmount)
                             .textFieldStyle(.roundedBorder)
                             .multilineTextAlignment(.trailing)
                             .focused($rightTyping)
-                            .onChange(of: rightAmount) {
-                                if rightTyping {
-                                    leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
-                                }
-                                
-                            }
+                            .keyboardType(.decimalPad)
                     }
                 }
                 .padding()
@@ -147,6 +133,31 @@ struct ContentView: View {
                     
                 }
             }
+        }
+        .task {
+            try? Tips.configure()
+        }
+        .onChange(of: leftAmount) {
+            if leftTyping {
+                rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
+                UserDefaults.standard.setValue(rightAmount, forKey: "Right Amount")
+                UserDefaults.standard.setValue(leftAmount, forKey: "Left Amount")
+            }
+        }
+        .onChange(of: rightAmount) {
+            if rightTyping {
+                leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
+                UserDefaults.standard.setValue(rightAmount, forKey: "Right Amount")
+                UserDefaults.standard.setValue(leftAmount, forKey: "Left Amount")
+            }
+        }
+        .onChange(of: leftCurrency) {
+            leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
+            UserDefaults.standard.setLeftCurrency(leftCurrency: leftCurrency)
+        }
+        .onChange(of: rightCurrency) {
+            rightAmount = leftCurrency.convert(leftAmount, to: rightCurrency)
+            UserDefaults.standard.setRightCurrency(rightCurrency: rightCurrency)
         }
         .sheet(isPresented: $showExchangeInfo, content: {
             ExchangeInfo()
