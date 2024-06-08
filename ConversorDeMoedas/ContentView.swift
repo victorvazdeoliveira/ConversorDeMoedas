@@ -19,9 +19,8 @@ struct ContentView: View {
     @State var leftAmount = UserDefaults.standard.string(forKey: "Left Amount") ?? ""
     @State var rightAmount = UserDefaults.standard.string(forKey: "Right Amount") ?? ""
     
-    @FocusState var leftTyping
-    @FocusState var rightTyping
-    
+    @FocusState var leftTyping: Bool
+    @FocusState var rightTyping: Bool
     
     @State var leftCurrency: Currency = Currency(rawValue: UserDefaults.standard.getLeftCurrency()) ?? Currency.silverPenny
     @State var rightCurrency: Currency = Currency(rawValue: UserDefaults.standard.getRightCurrency()) ?? Currency.goldPiece
@@ -48,32 +47,7 @@ struct ContentView: View {
                 // Currency conversion section
                 HStack {
                     // Left conversion section
-                    VStack {
-                        // Currency
-                        HStack {
-                            // Currency image
-                            Image(leftCurrency.image)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 33)
-                            
-                            // Currency text
-                            Text(leftCurrency.name)
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                        }
-                        .padding(.bottom, -5)
-                        .onTapGesture {
-                            showSelectedCurrency.toggle()
-                        }
-                        .popoverTip(CurrencyTip(), arrowEdge: .bottom)
-                        
-                        // Textfield
-                        TextField("Amount", text: $leftAmount)
-                            .textFieldStyle(.roundedBorder)
-                            .focused($leftTyping)
-                            .keyboardType(.decimalPad)
-                    }
+                    CurrencySection(currency: $leftCurrency, showSelectedCurrency: $showSelectedCurrency, amount: $leftAmount, typing: $leftTyping)
                     
                     // Equal sign
                     Image(systemName: "equal")
@@ -82,32 +56,9 @@ struct ContentView: View {
                         .symbolEffect(.pulse)
                     
                     // Right conversion section
-                    VStack {
-                        // Currency
-                        HStack {
-                            // Currency text
-                            Text(rightCurrency.name)
-                                .font(.headline)
-                                .foregroundStyle(.white)
-                            
-                            // Currency image
-                            Image(rightCurrency.image)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 33)
-                        }
-                        .padding(.bottom, -5)
-                        .onTapGesture {
-                            showSelectedCurrency.toggle()
-                        }
-                        
-                        // Textfiled
-                        TextField("Amount", text: $rightAmount)
-                            .textFieldStyle(.roundedBorder)
-                            .multilineTextAlignment(.trailing)
-                            .focused($rightTyping)
-                            .keyboardType(.decimalPad)
-                    }
+                    CurrencySection(currency: $rightCurrency, showSelectedCurrency: $showSelectedCurrency, amount: $rightAmount, typing: $rightTyping
+                    )
+                        .multilineTextAlignment(.trailing)
                 }
                 .padding()
                 .background(.black.opacity(0.5))
@@ -132,6 +83,14 @@ struct ContentView: View {
                 }
             }
         }
+        .onTapGesture {
+            if leftTyping {
+                leftTyping.toggle()
+            }
+            if rightTyping {
+                rightTyping.toggle()
+            }
+        }
         .task {
             try? Tips.configure()
         }
@@ -148,10 +107,6 @@ struct ContentView: View {
                 UserDefaults.standard.setValue(rightAmount, forKey: "Right Amount")
                 UserDefaults.standard.setValue(leftAmount, forKey: "Left Amount")
             }
-        }
-        .onTapGesture {
-            leftTyping = false
-            rightTyping = false
         }
         .onChange(of: leftCurrency) {
             leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
