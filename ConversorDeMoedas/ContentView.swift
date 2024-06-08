@@ -19,10 +19,8 @@ struct ContentView: View {
     @State var leftAmount = UserDefaults.standard.string(forKey: "Left Amount") ?? ""
     @State var rightAmount = UserDefaults.standard.string(forKey: "Right Amount") ?? ""
     
-    @FocusState
-    var leftTyping
-    @FocusState
-    var rightTyping
+    @FocusState var leftTyping
+    @FocusState var rightTyping
     
     
     @State var leftCurrency: Currency = Currency(rawValue: UserDefaults.standard.getLeftCurrency()) ?? Currency.silverPenny
@@ -150,6 +148,10 @@ struct ContentView: View {
                 UserDefaults.standard.setValue(rightAmount, forKey: "Right Amount")
                 UserDefaults.standard.setValue(leftAmount, forKey: "Left Amount")
             }
+        }
+        .onTapGesture {
+            leftTyping = false
+            rightTyping = false
         }
         .onChange(of: leftCurrency) {
             leftAmount = rightCurrency.convert(rightAmount, to: leftCurrency)
