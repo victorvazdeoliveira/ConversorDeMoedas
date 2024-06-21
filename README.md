@@ -4,6 +4,8 @@ Olá, leitor(a).
 
 Nesse projeto foi criado um aplicativo iOS com a funcionalidade de converter valor de moedas para os ajustes selecionados dentro do mesmo.
 
+![](https://i.imgur.com/lJapdez.png)
+
 ## Funcionalidades
 ### Dicas de como utilizar o aplicativo
 Ao abrir pela primeira vez o aplicativo, aparecer-a na tela um pequeno pop-up sobre uma dica de como utiliza-lo.
